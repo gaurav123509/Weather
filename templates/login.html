@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SkyPulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+    <div class="bg-orb orb-three"></div>
+    <div class="bg-orb orb-four"></div>
+
+    <main class="login-wrap">
+        <section class="login-info">
+            <p class="kicker">Welcome to SkyPulse</p>
+            <h1>Weather insights with a stylish interface.</h1>
+            <p>Log in to access your weather dashboard and check updates city-wise in seconds.</p>
+        </section>
+
+        <section class="login-card">
+            <h2>Sign In</h2>
+            <form method="POST" class="login-form">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" placeholder="Enter username" required>
+
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" placeholder="Enter password" required>
+
+                <button type="submit">Login</button>
+            </form>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

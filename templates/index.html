@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyPulse Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="weather-page">
+    <div class="room-overlay"></div>
+    <div class="lamp lamp-left"></div>
+    <div class="lamp lamp-right"></div>
+
+    <main class="glass-shell">
+        <aside class="rail">
+            <span class="rail-dot"></span>
+            <span class="rail-dot"></span>
+            <span class="rail-dot active"></span>
+            <span class="rail-dot"></span>
+            <span class="rail-dot"></span>
+            <a class="rail-logout" href="/logout">Out</a>
+        </aside>
+
+        <section class="dashboard">
+            <div class="browser-bar">
+                <div class="browser-controls">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <form method="POST" class="browser-search">
+                    <input type="text" name="city" placeholder="Search city weather..." required>
+                    <button type="submit">Go</button>
+                </form>
+                <div class="user-chip">{{ user }}</div>
+            </div>
+
+            <h1>Weather</h1>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+
+            <div class="dashboard-grid">
+                <article class="panel panel-main">
+                    <div class="panel-head">
+                        <div>
+                            <p class="city">{{ weather.city if weather else "Jaipur" }}</p>
+                            <p class="temp">{{ weather.temp|round|int if weather else 12 }}deg C</p>
+                            <p class="range">H: {{ weather.temp_max|round|int if weather else 23 }}deg C | L: {{ weather.temp_min|round|int if weather else 10 }}deg C</p>
+                        </div>
+                        <div class="summary">
+                            {% if weather %}
+                                <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="{{ weather.description }}">
+                                <p>{{ weather.description }}</p>
+                            {% else %}
+                                <div class="fake-icon"></div>
+                                <p>Fog</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="hour-strip">
+                        {% if forecast %}
+                            {% for slot in forecast %}
+                                <div>
+                                    <p>{{ slot.time }}</p>
+                                    <strong>{{ slot.temp }}deg</strong>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div><p>6AM</p><strong>12deg</strong></div>
+                            <div><p>9AM</p><strong>16deg</strong></div>
+                            <div><p>12PM</p><strong>18deg</strong></div>
+                            <div><p>3PM</p><strong>20deg</strong></div>
+                            <div><p>6PM</p><strong>17deg</strong></div>
+                            <div><p>9PM</p><strong>14deg</strong></div>
+                        {% endif %}
+                    </div>
+                </article>
+
+                <article class="panel panel-air">
+                    <h2>Air Quality</h2>
+                    {% if air %}
+                        <p class="aqi-score">{{ air.status }} <span>{{ air.index }}</span></p>
+                        <p class="aqi-note">{{ air.note }}</p>
+                    {% else %}
+                        <p class="aqi-score">No Data <span>--</span></p>
+                        <p class="aqi-note">Search a city to load live air quality data.</p>
+                    {% endif %}
+                    <div class="aqi-bar"><i style="left: {{ air.marker if air else 0 }}%;"></i></div>
+                    <div class="aqi-metrics">
+                        <div><b>{{ air.co if air else "--" }}</b><p>CO</p></div>
+                        <div><b>{{ air.no2 if air else "--" }}</b><p>NO2</p></div>
+                        <div><b>{{ air.o3 if air else "--" }}</b><p>O3</p></div>
+                        <div><b>{{ air.pm10 if air else "--" }}</b><p>PM10</p></div>
+                    </div>
+                </article>
+
+                <article class="panel panel-extra">
+                    <h2>Extras</h2>
+                    <div class="mini-grid">
+                        <div><p>Feels like</p><strong>{{ weather.feels_like|round|int if weather else 12 }}deg C</strong></div>
+                        <div><p>Humidity</p><strong>{{ weather.humidity if weather else 85 }}%</strong></div>
+                        <div><p>Visibility</p><strong>{{ weather.visibility if weather else 11 }} km</strong></div>
+                        <div><p>Wind</p><strong>{{ weather.wind if weather else 6 }} km/h</strong></div>
+                    </div>
+                </article>
+
+                <article class="panel panel-twilight">
+                    <h2>Twilight</h2>
+                    <div class="arc-wrap">
+                        <div class="arc"></div>
+                        <div class="sun"></div>
+                    </div>
+                    <div class="sun-times">
+                        <div><p>Sunrise</p><strong>{{ weather.sunrise if weather else "--:--" }}</strong></div>
+                        <div><p>Sunset</p><strong>{{ weather.sunset if weather else "--:--" }}</strong></div>
+                    </div>
+                </article>
+
+                <article class="panel panel-tips">
+                    <h2>Lifestyle Tips</h2>
+                    <div class="tips-grid">
+                        {% if tips %}
+                            {% for tip in tips %}
+                                <div>{{ tip }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <div>Search a city for personalized weather tips.</div>
+                            <div>Heat/cold alert based on actual temperature.</div>
+                            <div>Humidity and wind based comfort guidance.</div>
+                            <div>Visibility safety hints for travel.</div>
+                            <div>Air quality caution when pollution is high.</div>
+                            <div>Cloud and pressure insights from live API.</div>
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

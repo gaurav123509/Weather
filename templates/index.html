@@ -49,7 +49,11 @@
                     <div class="panel-head">
                         <div>
                             <p class="city">{{ weather.city if weather else "Jaipur" }}</p>
-                            <p class="temp">{{ weather.temp|round|int if weather else 12 }}deg C</p>
+                            <p class="temp">
+                                <span id="temp-toggle" class="temp-toggle" title="Click to view temperature graph">
+                                    {{ weather.temp|round|int if weather else 12 }}deg C
+                                </span>
+                            </p>
                             <p class="range">H: {{ weather.temp_max|round|int if weather else 23 }}deg C | L: {{ weather.temp_min|round|int if weather else 10 }}deg C</p>
                         </div>
                         <div class="summary">
@@ -78,6 +82,19 @@
                             <div><p>3PM</p><strong>20deg</strong></div>
                             <div><p>6PM</p><strong>17deg</strong></div>
                             <div><p>9PM</p><strong>14deg</strong></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="temp-graph-card" id="temp-graph-card">
+                        <div class="temp-graph-head">
+                            <h3>Temperature Line Graph (Next 24 Hours)</h3>
+                            <p>Click `deg C` to show/hide</p>
+                        </div>
+                        {% if temp_trend %}
+                            <svg id="temp-line-graph" viewBox="0 0 620 230" preserveAspectRatio="none" role="img" aria-label="24 hour temperature trend"></svg>
+                            <div id="temp-graph-axis" class="temp-graph-axis"></div>
+                        {% else %}
+                            <p class="aqi-note">Search a city to load temperature trend graph.</p>
                         {% endif %}
                     </div>
                 </article>
@@ -180,6 +197,11 @@
                                 <div><p>Max Wind</p><strong id="selected-wind">{{ seven_day[0].wind }} km/h</strong></div>
                             </div>
                         </div>
+
+                        <div class="rain-graph">
+                            <p class="rain-graph-title">Rain Chance Graph (7 Days)</p>
+                            <div id="rain-bars" class="rain-bars"></div>
+                        </div>
                     {% else %}
                         <p class="aqi-note">Search a city to view 7-day forecast and calendar view.</p>
                     {% endif %}
@@ -238,6 +260,7 @@
             var tempEl = document.getElementById("selected-temp");
             var rainEl = document.getElementById("selected-rain");
             var windEl = document.getElementById("selected-wind");
+            var rainBarsEl = document.getElementById("rain-bars");
 
             if (!forecastData.length || !dateInput || !titleEl) return;
 
@@ -263,6 +286,42 @@
                 rainEl.textContent = selected.rain + "%";
                 windEl.textContent = selected.wind + " km/h";
                 setActiveChip(selected.date);
+                renderRainGraph(selected.date);
+            }
+
+            function renderRainGraph(activeDate) {
+                if (!rainBarsEl) return;
+                rainBarsEl.innerHTML = "";
+
+                forecastData.forEach(function (item) {
+                    var column = document.createElement("button");
+                    column.type = "button";
+                    column.className = "rain-col" + (item.date === activeDate ? " active" : "");
+                    column.setAttribute("data-date", item.date);
+
+                    var barWrap = document.createElement("span");
+                    barWrap.className = "rain-bar-wrap";
+
+                    var fill = document.createElement("span");
+                    fill.className = "rain-fill";
+                    fill.style.height = Math.max(6, item.rain) + "%";
+                    barWrap.appendChild(fill);
+
+                    var value = document.createElement("strong");
+                    value.textContent = item.rain + "%";
+
+                    var label = document.createElement("small");
+                    label.textContent = item.day;
+
+                    column.appendChild(barWrap);
+                    column.appendChild(value);
+                    column.appendChild(label);
+                    column.addEventListener("click", function () {
+                        updateSelection(item.date);
+                    });
+
+                    rainBarsEl.appendChild(column);
+                });
             }
 
             chips.forEach(function (chip) {
@@ -274,6 +333,86 @@
             dateInput.addEventListener("change", function () {
                 updateSelection(dateInput.value);
             });
+
+            updateSelection(dateInput.value);
+        })();
+
+        (function () {
+            var tempTrendData = {{ temp_trend|tojson }};
+            var toggle = document.getElementById("temp-toggle");
+            var card = document.getElementById("temp-graph-card");
+            var svg = document.getElementById("temp-line-graph");
+            var axis = document.getElementById("temp-graph-axis");
+
+            if (!toggle || !card) return;
+
+            function renderTempGraph() {
+                if (!svg || !axis || !tempTrendData.length) return;
+
+                var width = 620;
+                var height = 230;
+                var padX = 46;
+                var padY = 24;
+                var minTemp = Math.min.apply(null, tempTrendData.map(function (p) { return p.temp; }));
+                var maxTemp = Math.max.apply(null, tempTrendData.map(function (p) { return p.temp; }));
+                var span = Math.max(1, maxTemp - minTemp);
+                var stepX = (width - padX * 2) / Math.max(1, tempTrendData.length - 1);
+
+                svg.innerHTML = "";
+                axis.innerHTML = "";
+
+                var points = tempTrendData.map(function (item, idx) {
+                    var x = padX + (idx * stepX);
+                    var y = height - padY - (((item.temp - minTemp) / span) * (height - (padY * 2)));
+                    return { x: x, y: y, time: item.time, temp: item.temp };
+                });
+
+                for (var l = 0; l < 4; l++) {
+                    var gridY = padY + (l * ((height - (padY * 2)) / 3));
+                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", padX);
+                    line.setAttribute("x2", width - padX);
+                    line.setAttribute("y1", gridY);
+                    line.setAttribute("y2", gridY);
+                    line.setAttribute("class", "temp-grid-line");
+                    svg.appendChild(line);
+                }
+
+                var polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                polyline.setAttribute("class", "temp-line");
+                polyline.setAttribute("points", points.map(function (p) { return p.x + "," + p.y; }).join(" "));
+                svg.appendChild(polyline);
+
+                points.forEach(function (p) {
+                    var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", p.x);
+                    dot.setAttribute("cy", p.y);
+                    dot.setAttribute("r", 4);
+                    dot.setAttribute("class", "temp-dot");
+                    svg.appendChild(dot);
+
+                    var t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    t.setAttribute("x", p.x);
+                    t.setAttribute("y", p.y - 10);
+                    t.setAttribute("text-anchor", "middle");
+                    t.setAttribute("class", "temp-dot-label");
+                    t.textContent = p.temp + "deg";
+                    svg.appendChild(t);
+
+                    var xLabel = document.createElement("span");
+                    xLabel.textContent = p.time.replace(":00", "");
+                    axis.appendChild(xLabel);
+                });
+            }
+
+            function toggleGraph() {
+                card.classList.toggle("open");
+                if (card.classList.contains("open")) {
+                    renderTempGraph();
+                }
+            }
+
+            toggle.addEventListener("click", toggleGraph);
         })();
     </script>
 </body>

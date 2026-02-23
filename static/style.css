@@ -392,6 +392,72 @@ p {
     font-size: 0.95rem;
 }
 
+.rain-graph {
+    margin-top: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.rain-graph-title {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.rain-bars {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(56px, 1fr));
+    gap: 8px;
+}
+
+.rain-col {
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 6px;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.rain-bar-wrap {
+    width: 100%;
+    height: 90px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 5px;
+}
+
+.rain-fill {
+    width: 100%;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #8cd4ff, #4a9fd7);
+    min-height: 6px;
+}
+
+.rain-col strong {
+    font-size: 0.86rem;
+}
+
+.rain-col small {
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+
+.rain-col.active {
+    border-color: rgba(193, 236, 255, 0.75);
+    box-shadow: 0 0 14px rgba(124, 196, 233, 0.35);
+    background: rgba(122, 184, 218, 0.22);
+}
+
 .panel-head {
     display: flex;
     justify-content: space-between;
@@ -407,6 +473,17 @@ p {
     font-size: clamp(2.3rem, 4.2vw, 3rem);
     line-height: 1.02;
     font-weight: 700;
+}
+
+.temp-toggle {
+    cursor: pointer;
+    border-bottom: 2px dashed rgba(220, 244, 255, 0.45);
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.temp-toggle:hover {
+    color: #d9f5ff;
+    border-color: rgba(220, 244, 255, 0.82);
 }
 
 .range {
@@ -451,6 +528,79 @@ p {
 
 .hour-strip strong {
     font-size: 1rem;
+}
+
+.temp-graph-card {
+    margin-top: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 12px;
+    display: none;
+}
+
+.temp-graph-card.open {
+    display: block;
+}
+
+.temp-graph-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.temp-graph-head h3 {
+    font-family: "Outfit", sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.temp-graph-head p {
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+#temp-line-graph {
+    width: 100%;
+    height: 230px;
+}
+
+.temp-grid-line {
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 1;
+}
+
+.temp-line {
+    fill: none;
+    stroke: #8cd4ff;
+    stroke-width: 3;
+}
+
+.temp-dot {
+    fill: #d8f2ff;
+    stroke: rgba(46, 129, 177, 0.9);
+    stroke-width: 2;
+}
+
+.temp-dot-label {
+    fill: #e8f7ff;
+    font-size: 11px;
+    font-family: "Manrope", sans-serif;
+}
+
+.temp-graph-axis {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(54px, 1fr));
+    gap: 6px;
+}
+
+.temp-graph-axis span {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--muted);
 }
 
 .aqi-score {
@@ -847,6 +997,15 @@ p {
         grid-template-columns: repeat(3, 1fr);
     }
 
+    .temp-graph-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .temp-graph-axis {
+        grid-template-columns: repeat(4, minmax(54px, 1fr));
+    }
+
     .aqi-metrics {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -867,6 +1026,10 @@ p {
 
     .selected-metrics {
         grid-template-columns: 1fr;
+    }
+
+    .rain-bars {
+        grid-template-columns: repeat(4, minmax(56px, 1fr));
     }
 
     .footer-links {

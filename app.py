@@ -150,6 +150,7 @@ def index():
 
     weather = None
     forecast = []
+    temp_trend = []
     air = None
     tips = []
     seven_day = []
@@ -211,6 +212,11 @@ def index():
                                 "temp": round(slot["main"]["temp"]),
                                 "icon": slot["weather"][0]["icon"]
                             })
+                        for slot in forecast_data[:8]:
+                            temp_trend.append({
+                                "time": format_time(slot["dt"], timezone_offset, "%I:%M %p"),
+                                "temp": round(slot["main"]["temp"], 1)
+                            })
 
                     air_params = {
                         "lat": lat,
@@ -249,6 +255,7 @@ def index():
         "index.html",
         weather=weather,
         forecast=forecast,
+        temp_trend=temp_trend,
         air=air,
         tips=tips,
         seven_day=seven_day,

@@ -9,6 +9,7 @@ API_KEY = "056bc2805c791e9a8ac92d45aeb77836"
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 AIR_QUALITY_URL = "https://api.openweathermap.org/data/2.5/air_pollution"
+SEVEN_DAY_URL = "https://api.open-meteo.com/v1/forecast"
 
 
 def format_time(timestamp, offset_seconds, fmt):
@@ -63,6 +64,85 @@ def build_tips(weather, air):
             unique.append(tip)
     return unique[:6]
 
+
+def weather_code_label(code):
+    mapping = {
+        0: "Clear Sky",
+        1: "Mostly Clear",
+        2: "Partly Cloudy",
+        3: "Cloudy",
+        45: "Fog",
+        48: "Depositing Rime Fog",
+        51: "Light Drizzle",
+        53: "Drizzle",
+        55: "Dense Drizzle",
+        61: "Slight Rain",
+        63: "Rain",
+        65: "Heavy Rain",
+        71: "Slight Snow",
+        73: "Snow",
+        75: "Heavy Snow",
+        80: "Rain Showers",
+        81: "Rain Showers",
+        82: "Heavy Showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm Hail",
+        99: "Thunderstorm Hail"
+    }
+    return mapping.get(code, "Weather Update")
+
+
+def fetch_seven_day_forecast(lat, lon):
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "daily": "weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max",
+        "timezone": "auto",
+        "forecast_days": 7
+    }
+
+    try:
+        response = requests.get(SEVEN_DAY_URL, params=params, timeout=10)
+    except requests.RequestException:
+        response = None
+
+    if not response or response.status_code != 200:
+        return []
+
+    daily = response.json().get("daily", {})
+    dates = daily.get("time", [])
+    highs = daily.get("temperature_2m_max", [])
+    lows = daily.get("temperature_2m_min", [])
+    rain_chance = daily.get("precipitation_probability_max", [])
+    wind_speeds = daily.get("windspeed_10m_max", daily.get("wind_speed_10m_max", []))
+    weather_codes = daily.get("weathercode", daily.get("weather_code", []))
+
+    seven_day = []
+    for idx, day_str in enumerate(dates[:7]):
+        try:
+            parsed = datetime.strptime(day_str, "%Y-%m-%d")
+        except ValueError:
+            continue
+
+        high = round(highs[idx]) if idx < len(highs) and highs[idx] is not None else "--"
+        low = round(lows[idx]) if idx < len(lows) and lows[idx] is not None else "--"
+        rain = round(rain_chance[idx]) if idx < len(rain_chance) and rain_chance[idx] is not None else 0
+        wind = round(wind_speeds[idx]) if idx < len(wind_speeds) and wind_speeds[idx] is not None else 0
+        code = weather_codes[idx] if idx < len(weather_codes) and weather_codes[idx] is not None else -1
+
+        seven_day.append({
+            "date": day_str,
+            "day": parsed.strftime("%a"),
+            "display": parsed.strftime("%d %b"),
+            "weather": weather_code_label(code),
+            "high": high,
+            "low": low,
+            "rain": rain,
+            "wind": wind
+        })
+
+    return seven_day
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if "user" not in session:
@@ -72,6 +152,7 @@ def index():
     forecast = []
     air = None
     tips = []
+    seven_day = []
     error = None
 
     if request.method == "POST":
@@ -158,6 +239,8 @@ def index():
                                 "pm10": round(components.get("pm10", 0))
                             }
 
+                    seven_day = fetch_seven_day_forecast(lat, lon)
+
                 tips = build_tips(weather, air)
             else:
                 error = "City not found or weather service unavailable. Try again!"
@@ -168,6 +251,7 @@ def index():
         forecast=forecast,
         air=air,
         tips=tips,
+        seven_day=seven_day,
         error=error,
         user=session.get("user", "Guest")
     )
@@ -193,6 +277,49 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/feedback", methods=["GET", "POST"])
+def feedback():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    success = False
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        message = request.form.get("message", "").strip()
+        if name and message:
+            success = True
+
+    return render_template(
+        "support_form.html",
+        page_title="Feedback",
+        help_text="Share your experience to help us improve SkyPulse.",
+        success=success,
+        user=session.get("user", "Guest")
+    )
+
+
+@app.route("/contact-us", methods=["GET", "POST"])
+def contact_us():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    success = False
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        message = request.form.get("message", "").strip()
+        if name and message:
+            success = True
+
+    return render_template(
+        "support_form.html",
+        page_title="Contact Us",
+        help_text="Have a question? Send us a message and we will reach out soon.",
+        success=success,
+        user=session.get("user", "Guest")
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)

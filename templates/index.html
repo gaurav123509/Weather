@@ -83,7 +83,10 @@
                 </article>
 
                 <article class="panel panel-air">
-                    <h2>Air Quality</h2>
+                    <div class="air-head">
+                        <h2>Air Quality</h2>
+                        <p id="live-time" class="live-time">--:--:--</p>
+                    </div>
                     {% if air %}
                         <p class="aqi-score">{{ air.status }} <span>{{ air.index }}</span></p>
                         <p class="aqi-note">{{ air.note }}</p>
@@ -139,8 +142,139 @@
                         {% endif %}
                     </div>
                 </article>
+
+                <article class="panel panel-week">
+                    <h2>7-Day Forecast + Calendar</h2>
+                    {% if seven_day %}
+                        <div class="week-toolbar">
+                            <label for="forecast-date">Select Date</label>
+                            <input
+                                id="forecast-date"
+                                type="date"
+                                min="{{ seven_day[0].date }}"
+                                max="{{ seven_day[-1].date }}"
+                                value="{{ seven_day[0].date }}"
+                            >
+                        </div>
+
+                        <div class="week-strip" id="week-strip">
+                            {% for day in seven_day %}
+                                <button
+                                    type="button"
+                                    class="day-chip{% if loop.first %} active{% endif %}"
+                                    data-date="{{ day.date }}"
+                                >
+                                    <span>{{ day.day }}</span>
+                                    <strong>{{ day.high }}deg / {{ day.low }}deg</strong>
+                                    <small>{{ day.weather }}</small>
+                                </button>
+                            {% endfor %}
+                        </div>
+
+                        <div class="selected-forecast">
+                            <p class="selected-title" id="selected-title">{{ seven_day[0].day }}, {{ seven_day[0].display }}</p>
+                            <p class="selected-weather" id="selected-weather">{{ seven_day[0].weather }}</p>
+                            <div class="selected-metrics">
+                                <div><p>High / Low</p><strong id="selected-temp">{{ seven_day[0].high }}deg / {{ seven_day[0].low }}deg</strong></div>
+                                <div><p>Rain Chance</p><strong id="selected-rain">{{ seven_day[0].rain }}%</strong></div>
+                                <div><p>Max Wind</p><strong id="selected-wind">{{ seven_day[0].wind }} km/h</strong></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="aqi-note">Search a city to view 7-day forecast and calendar view.</p>
+                    {% endif %}
+                </article>
             </div>
+
+            <footer class="dashboard-footer">
+                <div class="footer-social">
+                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6.94 8.5H3.56V20h3.38V8.5ZM5.25 3A2.02 2.02 0 1 0 5.3 7.04 2.02 2.02 0 0 0 5.25 3Zm15.19 9.9c0-3.53-1.88-5.17-4.38-5.17-2.02 0-2.92 1.11-3.43 1.9V8.5H9.25V20h3.38v-5.7c0-1.5.28-2.95 2.14-2.95 1.84 0 1.87 1.72 1.87 3.05V20H20V12.9h.44Z"/>
+                        </svg>
+                    </a>
+                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 .5A12 12 0 0 0 8.21 23.9c.6.11.82-.26.82-.57v-2.2c-3.34.72-4.04-1.42-4.04-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.75.08-.73.08-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.84 2.82 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.31-5.47-1.36-5.47-6.03 0-1.33.47-2.41 1.24-3.27-.12-.3-.54-1.56.12-3.24 0 0 1.02-.33 3.35 1.24a11.4 11.4 0 0 1 6.1 0c2.33-1.57 3.35-1.24 3.35-1.24.66 1.68.24 2.94.12 3.24.77.86 1.24 1.94 1.24 3.27 0 4.68-2.8 5.72-5.48 6.03.43.37.82 1.1.82 2.23v3.3c0 .32.22.69.83.57A12 12 0 0 0 12 .5Z"/>
+                        </svg>
+                    </a>
+                    <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 7.4A4.6 4.6 0 1 0 12 16.6 4.6 4.6 0 0 0 12 7.4Zm0 7.6A3 3 0 1 1 12 9a3 3 0 0 1 0 6Zm5.86-7.8a1.08 1.08 0 1 1-2.16 0 1.08 1.08 0 0 1 2.16 0ZM21 7.22c-.05-1.03-.28-1.95-1.03-2.7-.74-.74-1.67-.98-2.7-1.03C16.2 3.43 15.87 3.4 12 3.4c-3.87 0-4.2.02-5.27.07-1.03.05-1.95.29-2.7 1.03-.74.75-.98 1.67-1.03 2.7C2.95 8.3 2.93 8.63 2.93 12s.02 3.7.07 4.78c.05 1.03.29 1.95 1.03 2.7.75.74 1.67.98 2.7 1.03 1.08.05 1.4.07 5.27.07 3.87 0 4.2-.02 5.27-.07 1.03-.05 1.96-.29 2.7-1.03.75-.75.98-1.67 1.03-2.7.05-1.08.07-1.4.07-4.78s-.02-3.7-.07-4.78Zm-1.9 9.42c-.05.82-.18 1.26-.37 1.58-.26.41-.57.72-.98.98-.31.2-.75.33-1.58.37-1.06.05-1.37.06-4.17.06s-3.1-.01-4.17-.06c-.83-.04-1.27-.17-1.58-.37a2.65 2.65 0 0 1-.98-.98c-.2-.32-.33-.76-.37-1.58-.05-1.07-.06-1.38-.06-4.17s.01-3.1.06-4.17c.04-.83.17-1.27.37-1.58.26-.41.57-.72.98-.98.31-.2.75-.33 1.58-.37C8.9 5 9.2 5 12 5s3.1 0 4.17.06c.83.04 1.27.17 1.58.37.41.26.72.57.98.98.2.31.32.75.37 1.58.05 1.06.06 1.37.06 4.17s-.01 3.1-.06 4.17Z"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="footer-links">
+                    <a href="{{ url_for('feedback') }}">Feedback</a>
+                    <a href="{{ url_for('contact_us') }}">Contact Us</a>
+                </div>
+            </footer>
         </section>
     </main>
+    <script>
+        (function () {
+            var timeEl = document.getElementById("live-time");
+            if (!timeEl) return;
+
+            function updateTime() {
+                var now = new Date();
+                timeEl.textContent = now.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                });
+            }
+
+            updateTime();
+            setInterval(updateTime, 1000);
+        })();
+
+        (function () {
+            var forecastData = {{ seven_day|tojson }};
+            var dateInput = document.getElementById("forecast-date");
+            var chips = Array.prototype.slice.call(document.querySelectorAll(".day-chip"));
+            var titleEl = document.getElementById("selected-title");
+            var weatherEl = document.getElementById("selected-weather");
+            var tempEl = document.getElementById("selected-temp");
+            var rainEl = document.getElementById("selected-rain");
+            var windEl = document.getElementById("selected-wind");
+
+            if (!forecastData.length || !dateInput || !titleEl) return;
+
+            function setActiveChip(date) {
+                chips.forEach(function (chip) {
+                    if (chip.dataset.date === date) {
+                        chip.classList.add("active");
+                    } else {
+                        chip.classList.remove("active");
+                    }
+                });
+            }
+
+            function updateSelection(date) {
+                var selected = forecastData.find(function (item) {
+                    return item.date === date;
+                }) || forecastData[0];
+
+                dateInput.value = selected.date;
+                titleEl.textContent = selected.day + ", " + selected.display;
+                weatherEl.textContent = selected.weather;
+                tempEl.textContent = selected.high + "deg / " + selected.low + "deg";
+                rainEl.textContent = selected.rain + "%";
+                windEl.textContent = selected.wind + " km/h";
+                setActiveChip(selected.date);
+            }
+
+            chips.forEach(function (chip) {
+                chip.addEventListener("click", function () {
+                    updateSelection(chip.dataset.date);
+                });
+            });
+
+            dateInput.addEventListener("change", function () {
+                updateSelection(dateInput.value);
+            });
+        })();
+    </script>
 </body>
 </html>
